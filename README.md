@@ -20,6 +20,7 @@ $ git pull origin master
 ...(作業)...
 $ git add -A
 $ git commit -m "<your commit massage>"
+$ git pull origin master
 $ git push origin <your branch>
 ```
 
