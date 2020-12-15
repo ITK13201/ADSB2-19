@@ -1,4 +1,5 @@
 * BS_ver0.1 ベンチマーク用
+<br>
 評価：コストとハミング距離だけ
 <br>
 ITERATE: 生成する行数, hamming distance: ハミング距離
