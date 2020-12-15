@@ -14,13 +14,19 @@ ITERATE = 10 hamming distance = 4395
 ITERATE = 15 hamming distance = 1400
 <br>
 ITERATE = 20 hamming distance = 439
+<br>
 ITERATE = 25 hamming distance = 121
+<br>
 ITERATE = 30 hamming distance = 39
+<br>
 ITERATE = 35 hamming distance = 19
+<br>
 ITERATE = 40 hamming distance = 2
+<br>
 ITERATE = 45 hamming distance = 2
+<br>
 ITERATE = 50 hamming distance = 0
-
+<br>
 ベンチマーク用でもコスト捨てるとハミング距離0になります()
 
 * BS_ver0.2 改良版
