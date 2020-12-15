@@ -1,5 +1,5 @@
 * BS_ver0.1 ベンチマーク用
-<br>
+
 評価：コストとハミング距離だけ
 <br>
 ITERATE: 生成する行数, hamming distance: ハミング距離
@@ -29,6 +29,7 @@ ITERATE = 45 hamming distance = 2
 ITERATE = 50 hamming distance = 0
 <br>
 ベンチマーク用でもコスト捨てるとハミング距離0になります()
+
 
 * BS_ver0.2 改良版
 <br>
