@@ -20,7 +20,7 @@ int enc(){
   unsigned char res;
   char S[200000];
   rep(i,200000) S[i]=getc(ofp);
-  rep(i,200000) fputc(i%2?S[i]=='1'?'C':'T':S[i]=='1'?'G':'A',efp); // C T G A
+  rep(i,200000) fputc(i&1?S[i]=='1'?'C':'T':S[i]=='1'?'G':'A',efp);
   printf("\n");
   res = '\n';
   fputc(res, efp);
