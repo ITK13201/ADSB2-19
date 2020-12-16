@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "grpwk20.h"
 #pragma GCC optimize("Ofast")
+#pragma GCC target("avx2")
+#pragma GCC optimize("unroll-loops")
 #define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
 
 int enc(){
@@ -10,22 +12,14 @@ int enc(){
     fprintf(stderr, "cannot open %s\n", ORGDATA);
     exit(1);
   }
-
   FILE *efp;
   if((efp = fopen(ENCDATA, "w")) ==NULL){
     fprintf(stderr, "cannot open %s\n", ENCDATA);
     exit(1);
   }
-
-  unsigned char res;
-  char S[200000];
-  rep(i,200000) S[i]=getc(ofp);
-  rep(i,200000) fputc(i&1?S[i]=='1'?'C':'T':S[i]=='1'?'G':'A',efp);
-  printf("\n");
-  res = '\n';
-  fputc(res, efp);
-  fclose(ofp);
-  fclose(efp);
+  rep(i,200000) fputc(getc(ofp)=='1'?i&1?'C':'G':i&1?'T':'A',efp);
+  fputc('\n', efp);
+  fclose(ofp),fclose(efp);
   return(0);
 }
 
