@@ -17,7 +17,10 @@ int enc(){
     fprintf(stderr, "cannot open %s\n", ENCDATA);
     exit(1);
   }
-  rep(i,200000) fputc(getc(ofp)=='1'?i&1?'C':'G':i&1?'T':'A',efp);
+  rep(i,199998) fputc(getc(ofp)=='1'?i&1?'C':'G':i&1?'T':'A',efp);
+  char c1=getc(ofp),c2=getc(ofp);
+  int pt=(c1-'0')*2+(c2-'0');
+  fputc(pt==0?'A':pt==1?'T':pt==2?'G':'C',efp);
   fputc('\n', efp);
   fclose(ofp),fclose(efp);
   return(0);
