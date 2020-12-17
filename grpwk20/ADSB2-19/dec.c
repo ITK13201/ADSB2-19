@@ -70,7 +70,7 @@ int dec(){
   unsigned char now[N];
   int zero,one,wrong;
   unsigned char base[M+3];
-  rep(i,200000){
+  rep(i,199998){
     rep(j,N) now[j]=S[j][pt[j]];
     /*if(i>=199900){
       rep(j,N) printf("%d ",now[j]);
@@ -159,6 +159,15 @@ int dec(){
       if(pt[j]>=204900) pt[j]=201000;
     } 
   }
+  int last[4]={};
+  rep(i,N) if(S[i][pt[i]]!=4) last[S[i][pt[i]]]++;
+  int ls=0,maxi=0;
+  rep(i,4) if(maxi<last[i]) maxi=last[i],ls=i;
+  char c2=ls&1;
+  ls/=2;
+  char c1=ls;
+  fputc('0'+c1,dfp);
+  fputc('0'+c2,dfp);
   /*rep(i,N){
     printf("%d ",pt[i]);
   }*/
