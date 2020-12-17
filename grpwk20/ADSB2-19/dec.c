@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include "grpwk20.h"
 #pragma GCC optimize("Ofast")
+#pragma GCC target("avx2")
+#pragma GCC optimize("unroll-loops")
 #define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
 #define max(a,b) a>b?a:b
-#define N 6
-#define M 15
+#define N 5
+#define M 13
 
 inline static unsigned char edis(unsigned char *S,unsigned char *T){
   unsigned char dp[M+1][M+1];
