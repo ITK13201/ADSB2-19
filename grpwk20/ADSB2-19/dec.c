@@ -4,8 +4,8 @@
 #pragma GCC optimize("Ofast")
 #define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
 #define max(a,b) a>b?a:b
-#define N 9
-#define M 18
+#define N 6
+#define M 15
 
 inline static unsigned char edis(unsigned char *S,unsigned char *T){
   unsigned char dp[M+1][M+1];
@@ -76,8 +76,8 @@ int dec(){
     zero=0,one=0;
     rep(j,N){
       if(now[j]==4) continue;
-      else if(now[j]&2) one++;
-      else zero++;
+      else if(now[j]&2 && !((i&1)^(now[j]&1))) one++;
+      else if(!(now[j]&2) && !((i&1)^(now[j]&1))) zero++;
     }
     if(zero>=one) fputc('0',dfp),wrong=1;
     else fputc('1',dfp),wrong=0;
@@ -104,7 +104,7 @@ int dec(){
     rep(j,N){
       if(now[j]==4) continue;
       if(wrong){
-        if(now[j]<2) continue;
+        if(now[j]<2 && !((now[j]&1)^(i&1))) continue;
         unsigned char *p2=&S[j][pt[j]+1];
         unsigned char diff[6];
         diff[0]=edis(p,p2);
@@ -124,7 +124,7 @@ int dec(){
         else pt[j]-=3;
       }
       else{
-        if(now[j]>=2) continue;
+        if(now[j]>=2 && !((now[j]&1)^(i&1))) continue;
         unsigned char *p2=&S[j][pt[j]+1];
         unsigned char diff[6];
         diff[0]=edis(p,p2);
