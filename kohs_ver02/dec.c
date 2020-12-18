@@ -1,173 +1,370 @@
+#pragma GCC optimize("Ofast")
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "grpwk20.h"
-#define DECDATA_LEN 250000
-#define SEARCH 10 // エラー補完のために探索する数
-#define ERROR 3   // エラー
-#define DELETE 5  // 挿入エラーと判定された、削除対象
-#define UNJUDGE 7 // 判定できない
+#define BLOCK_LEN 5556
+#define DATA_LEN 200000
+#define ITERATE 17 // 読み取る行数
+#define JUDGE 8   // 同一の箇所を読み取ったデータであると判定するハミング距離の閾値
+#define OVER  1000 // 1つのindexに重複できるデータの個数
+#define OVER_sub 1000 // check関数用
+#define WEIGHT 10  // 多数決決定法において当たりと判定されたものに付ける重み
 
-int fir[DECDATA_LEN]={0};
-int sec[DECDATA_LEN]={0};
+typedef struct{
+  int count;
+  int dist_plus;
+  int flg[OVER]; // そのcount値が当たりであれば1、はずれであれば0
+  unsigned char data[OVER][18];  
+}BLOCK;
 
-int double_null_cnt = 0; // fir,sec共に同じ位置でエラーが挿入か欠損か判定出来ない個数
-int fir_null_cnt = 0; //firのうちnullが見つかった数 (可変)
-int sec_null_cnt = 0; //secのうちnullが見つかった数 (可変)
-int co_null_cnt = 0;
-int fir_null=0; //firのうちnullが見つかった数 (総計)
-int sec_null=0; //secのうちnullが見つかった数 (総計)
-int fir_len=0, sec_len=0; // firの長さ,　secの長さ
+// check関数用
+typedef struct{
+  int left[ITERATE];
+  int ham[ITERATE];
+  int flg[ITERATE];  // hamが8以下であれば1 そうで無ければ0
+}CHECK_SUB;
 
-int err_2(int fir[], int sec[], int pos);
-int err(int fir[], int sec[], int pos, int which);
+BLOCK block[ITERATE][BLOCK_LEN]; // インデックスに応じた文字列を格納
+CHECK_SUB check_sub[ITERATE];
+unsigned char id_char[7]; // distribute用
+int atari[BLOCK_LEN] = {0}; //指定のindexが当たりであれば1, はずれであれば0
+unsigned char mdres[20]; // 多数決結果を一時的に格納 majority decision result
 
-/*err: 挿入または欠損エラーが1箇所で発生した際に対処する関数-----------------------------------------------------------*/
-int err(int fir[], int sec[], int pos, int which){ 
-  // pos: エラー発生箇所のindex   which: エラーがfirなら0 secなら1 
-    int search = SEARCH; // 探索数
-    int j=0;
-    int search_flg=0; // サーチ中に比較要素が異なれば1になる (欠損エラーであれば1, 挿入エラーであれば0)
-    int fir_pos = pos - sec_null_cnt; //firのエラー参照箇所
-    int sec_pos = pos - fir_null_cnt; //secのエラー参照箇所
-    if(which==0){ // firにエラーがあった場合-----------------------------------------------------------
-      for(j=1; j<=search;j++){ // エラー箇所から先SEARCH個を探索
-        if(fir_pos+j >=fir_len || sec_pos+j-1 >=sec_null_cnt) // 配列の端であれば終わり
-          break;
-        // fir[pos+1]~fir[pos+SEARCH]
-        // sec[pos]~sec[pos+SEARCH-1]　を比較する
-        if(fir[fir_pos+j]==ERROR && sec[sec_pos+j-1] == ERROR){ // 両方エラーだったとき----------
-          fir[fir_pos+j] = err_2(fir, sec, pos+j);
-          if(fir[fir_pos+j] ==UNJUDGE){
-            sec[sec_pos+j-1] = UNJUDGE; double_null_cnt++;
-          }else if(fir[fir_pos+j]<=1) sec[sec_pos+j-1] = DELETE; 
-          else                        sec[sec_pos+j-1] = fir[fir_pos+j+1]; // -----------------
-        }else if(fir[fir_pos+j] == ERROR){ // firに途中でエラーが出てきたとき
-          fir[fir_pos+j] = err(fir, sec, pos+j, 0);
-        }else if(sec[sec_pos+j-1] == ERROR){ // secに途中でエラーが出てきたとき
-          sec[sec_pos+j-1] = err(fir, sec, pos+j-1, 1);
-        }
-        if(fir[fir_pos+j] != sec[sec_pos+j-1]){ // firのエラーは欠損エラーであると判定されたとき
-          search_flg = 1; break;
-        }
-      }
-      if(search_flg==0){ // 挿入エラーだった場合
-        fir_null_cnt++;  // 項目を後で削除するため
-        sec_pos = pos - fir_null_cnt;
-        fir_null++;      return DELETE; // エラー箇所は削除される
-      }else              return sec[sec_pos]; // 欠損エラーだった場合 -> 箇所にはもう一方の値が入る
-    }else if(which == 1){ // secにエラーがあった場合-----------------------------------------------------
-      for(j=1; j<=search; j++){  // エラー箇所から先SEARCH個を探索
-        if(fir_pos+j-1 >=fir_len || sec_pos+j >=sec_null_cnt) // 配列の端であれば終わり
-          break;
-        // fir[pos]~fir[pos+SEARCH-1]
-        // sec[pos+1]~sec[pos+SEARCH]を検索
-        if(fir[fir_pos+j-1]==ERROR && sec[sec_pos+j] ==ERROR){ // 両方エラーだった場合-----
-          fir[fir_pos+j-1] = err_2(fir, sec, pos+j);
-          if(fir[fir_pos+j-1] ==UNJUDGE){
-            sec[sec_pos+j] = UNJUDGE; double_null_cnt++;
-          }else if(fir[fir_pos+j-1]<=1) sec[sec_pos+j] = DELETE; // 5はnull
-          else                          sec[sec_pos+j] = fir[fir_pos+j-1+1]; // ----------
-        }else if(fir[fir_pos+j-1] == ERROR){ // 途中でfirにエラーがみつかった時
-          fir[fir_pos+j-1] = err(fir, sec, pos+j-1, 0);
-        }else if(sec[sec_pos+j] == ERROR){   // 途中でsecにエラーがみつかった時
-          sec[sec_pos+j] = err(fir, sec, pos+j, 1);
-        }
-        if(fir[fir_pos+j-1] != sec[sec_pos+j]){ // 挿入エラーが発見された場合
-          search_flg = 1; break;
-        }
-        //if(sec[sec_pos+j+1] != fir[fir_pos+j-1-1]){
-        //  search_flg = 1; break;
-        //}
-      }
-      if(search_flg==0){ // 挿入エラーだった場合
-        sec_null_cnt++;
-        fir_pos = pos - sec_null_cnt;  
-        sec_null++;              return DELETE; // エラー箇所は削除対象になる
-      }else if(search_flg == 1)  return fir[fir_pos]; // 欠損エラーの場合 -> エラー箇所にはもう一方の値が入る 
-    }
-    return 0;
-}
-/*--------------------------------------------------------------------------------------------------------------------*/
-/*err_2: firとsecが同じ位置でエラーが生じている場合に対応する関数--------------------------------------------------------*/
-int err_2(int fir[], int sec[], int pos){
-  // pos: エラー発生箇所のindex   which: エラーがfirなら0 secなら1 
-  // dec関数上では、firに返却値が格納される
-    printf("double error!\n");
-    int search = SEARCH;
-    int j=0, k=0;
-    int search_flg=0; // サーチ中に比較要素が異なれば1になる
-    int sub_flg = 0;
-    int fir_pos = pos - sec_null_cnt;
-    int sec_pos = pos - fir_null_cnt;
-    for(j=1; j<=search;j++){
-      if(fir_pos+j >=fir_len || sec_pos+j >=sec_null_cnt) // 配列の端であれば終わり
-        break;
-      if(fir[fir_pos+j] != sec[sec_pos+j]){ //どちらかが挿入エラーでもう一方が欠損エラーの可能性が高いと判定
-        search_flg = 1; break;
+
+/*init_block: blockの初期化-------------------------------------------------------------------*/
+void init_block(){
+  for(int i=0; i<ITERATE; i++){
+    for(int j=0; j<BLOCK_LEN; j++){ 
+      block[i][j].count = 0;
+      block[i][j].dist_plus = 0;
+      // for(int k=0; k<ITERATE-1; k++)
+      for(int k=0;k<OVER;k++){
+        block[i][j].flg[k] = 0;
+        block[i][j].data[k][0] = 'P'; // Pであれば空
       }
     }
-    if(search_flg==0){ // search個先全部が一緒だったらUNJUDGEとして登録  (ここはSEARCHの値を大きくすると、発生確率を下げられる。)
-      printf("UNJUDGE!\n");                 // 誤差発生の最大の原因箇所の1つ
-      return UNJUDGE; 
-    }else if(search_flg==1){ // search個先で異なる箇所があれば、どちらかが値を持ち、どちらかがnullとなるはず
-      k=0;
-      sub_flg=0; // firが欠損エラー、secが挿入エラーであれば1, 逆であれば0
-      for(k=1; k<=search; k++){
-        if(fir[fir_pos+j] != sec[sec_pos+j+1]){ // firが欠損エラー、secが挿入エラーの可能性が高い
-          sub_flg=1; break;
-        }
-      }
-      if(sub_flg == 1)      return sec[sec_pos+1]; 
-      else if(sub_flg == 0) return DELETE; // 5はnull
-    }
-    return 0;
-}
-/*-----------------------------------------------------------------------------------------------------------------------*/
-
-void adjust_null(int pos){
-  if(fir_null_cnt >0 && sec_null_cnt > 0){ // nullの数に応じてiとnull_countの値を調節する
-      co_null_cnt = fir_null_cnt;
-      if(sec_null_cnt < fir_null_cnt) co_null_cnt = sec_null_cnt;
-      pos -= co_null_cnt;
-      fir_null_cnt -= co_null_cnt;
-      sec_null_cnt -= co_null_cnt;
-      co_null_cnt = 0;
-    }
+  }
+  return;
 }
 
-/*revise: エラーに対処する関数--------------------------------------------------------------------------------------------*/
-void revise(int fir[], int sec[]){
-  int i=0;
-  int fir_len=0, sec_len=0;
-  fir_len = fir_len - fir_null;
-  sec_len = sec_len - sec_null;
-  int data_len = fir_len;
-  if(sec_len < fir_len) data_len = sec_len;
-  for(i=0; i<data_len; i++){ 
-    if(fir[i-sec_null_cnt] != ERROR && sec[i-fir_null_cnt] != ERROR) continue; // 両方エラーで無ければ次へ
-    if(fir[i-sec_null_cnt]==ERROR && sec[i-fir_null_cnt] == ERROR){ // 両方ともエラーであるとき--------------------------------
-      fir[i-sec_null_cnt] = err_2(fir, sec, i); // firにエラー対応結果を返す
-      if(fir[i-sec_null_cnt] ==UNJUDGE){ // firがUNJUDGEと判定された場合
-        sec[i-fir_null_cnt] = UNJUDGE; double_null_cnt++; // secもUNJUDGEDにする
-      }else if(fir[i-sec_null_cnt]<=1)      sec[i-fir_null_cnt] = DELETE; // firにsecの次の値が入るなら、secは除去
-      else  if(fir[i-sec_null_cnt]==DELETE) sec[i-fir_null_cnt] = fir[i-sec_null_cnt+1]; // firが除去ならsecにはfirの次の値が入る
-      
-    }else if(fir[i-sec_null_cnt] == ERROR){ // firがエラーだったとき----------------------------------------------------------
-      fir[i-sec_null_cnt] = err(fir, sec, i, 0);
-    }else if(sec[i-fir_null_cnt] == ERROR){ // secがエラーだったとき-----------------------------------------------------------
-      sec[i-fir_null_cnt] = err(fir, sec, i, 1); 
-    }else if(fir[i-sec_null_cnt] != sec[i-fir_null_cnt]){ // firとsecが01で一致しない時->挿入または欠損エラー--------------------
-      fir[i-sec_null_cnt] = err_2(fir, sec, i); // firにエラー対応結果を返す
-      if(fir[i-sec_null_cnt] ==UNJUDGE){ // firがUNJUDGEと判定された場合
-        sec[i-fir_null_cnt] = UNJUDGE; double_null_cnt++; // secもUNJUDGEDにする
-      }else if(fir[i-sec_null_cnt]<=1)      sec[i-fir_null_cnt] = DELETE; // firにsecの次の値が入るなら、secは除去
-      else  if(fir[i-sec_null_cnt]==DELETE) sec[i-fir_null_cnt] = fir[i-sec_null_cnt+1]; // firが除去ならsecにはfirの次の値が入る
+/*init_check_sub: check_subの初期化-----------------------------------------------------------*/
+void init_check_sub(){
+  for(int i=0; i<ITERATE;i++){
+    for(int j=0; j<ITERATE; j++){
+      check_sub[i].left[j] = -1;
+      // check_sub[i].right[j] = -1;
+      check_sub[i].ham[j] = 18;
+      check_sub[i].flg[j] = 0;
     }
-    adjust_null(i); 
+  }
+  return;
+}
+/* quad_sub: ATGCを数値に変換 (index用)-------------------------------------------------------*/
+int quad_sub(unsigned char ATGC){
+  switch(ATGC){
+    case 'A': return 0;
+    case 'C': return 1;
+    case 'G': return 2;
+    case 'T': return 3;
+  }
+  return 0;
+}
+/* quad2num: 4進数を10進数に変換 (index用)----------------------------------------------------*/
+int quad2num(unsigned char quad[]){
+  int num=0;
+  int tmp = 0;
+  //int dis = 0;
+  int i = 4096;
+  for(int j=0; j<7; j++){
+    tmp = quad_sub(quad[j]);
+    num += tmp * i;
+    if(j!=6) i = i/4;
+  }
+  i = 1;
+  if(num > 5555){ // 置換エラーで明らかにアウトなインデックスが出た時 GGCTGGA以上
+    num = rand() % 5555;
+  }
+  return num;
+}
+
+/* conv_sub: num2quadの補助関数---------------------------------------------------------------*/
+unsigned char conv_sub(int a){
+  switch(a){
+    case 0: return 'A';
+    case 1: return 'C';
+    case 2: return 'G';
+    case 3: return 'T';
+  }
+  return 'A';
+}
+
+/*num2quad 10進数をATGC4進数に変換------------------------------------------------------------*/
+void num2quad(int num){
+  int i = 4096; // 4^6
+  int tmp = num; // 各桁の値
+  int j=0; 
+  for(j=0; j<7; j++){
+    tmp = num / i;
+    id_char[j] = conv_sub(tmp);
+    num = num % i;
+    i = i / 4;
+  }
+  return;
+}
+
+/* ATGC2c1: 文字cから左側を取り出す---------------------------------------------------------*/
+unsigned char ATGC2c1(unsigned char c){
+  // unsigned char res = '0';
+  switch(c){
+    case 'A': return '0';
+    case 'C': return '0';
+    case 'G': return '1';
+    case 'T': return '1';
+  }
+  return '0';
+}
+/* ATGC2c2: 文字cから右側を取り出す---------------------------------------------------------*/
+unsigned char ATGC2c2(unsigned char c){
+  // unsigned char res = '0';
+  switch(c){
+    case 'A': return '0';
+    case 'C': return '1';
+    case 'G': return '0';
+    case 'T': return '1';
+  }
+  return '0';
+}
+
+/* hamming: 二つのデータのハミング距離を計算 (文字が異なれば+1)-------------------------------*/
+int  hamming(unsigned char v1[18], unsigned char v2[18]){
+  int distance = 0;
+  for(int i=0; i<18; i++){
+    if(v1[i] != v2[i]) distance++;
+  }
+  return distance;
+}
+
+/*check: 指定したインデックスの各文字列に対して、当たりがあるかを探索、あれば印をつける
+　　　　　返却値は当たりがあれば1 無ければ0---------------------------------------------------*/
+int check(int index){
+  init_check_sub();
+  int res =0;
+  int search_cnt = 0;
+  int tmp = 0;
+  int tmp_flg = 0;
+  int iter_sub[OVER_sub] = {-1};
+  int count_sub[OVER_sub] = {-1};
+  for(int i=0; i<ITERATE; i++){
+    for(int j=0; j<block[i][index].count; j++){
+      iter_sub[search_cnt] = i; // iterateの番号を入れる
+      count_sub[search_cnt] = j; // countの番号を入れる
+      search_cnt++;
+    }
+  }
+  // indexにある要素のハミング距離を比較する
+  for(int i=0; i<search_cnt; i++){
+    for(int j=i+1; j<search_cnt; j++){
+      if(iter_sub[i] == iter_sub[j]) continue; // もし同じITERATEを比較する時は飛ばす
+      tmp = hamming(block[iter_sub[i]][index].data[count_sub[i]], block[iter_sub[j]][index].data[count_sub[j]]);
+      if(tmp < check_sub[iter_sub[i]].ham[iter_sub[j]]){
+        check_sub[iter_sub[i]].ham[iter_sub[j]] = tmp;
+        if(tmp <= JUDGE){
+          res = 1;
+          atari[index] = 1;
+          check_sub[iter_sub[i]].flg[iter_sub[j]] = 1;
+          check_sub[iter_sub[i]].left[iter_sub[j]] = count_sub[i];
+          check_sub[iter_sub[j]].flg[iter_sub[i]] = 1;
+          check_sub[iter_sub[j]].left[iter_sub[i]] = count_sub[j];
+        }
+      }
+    }
+  }
+  // int flg_cnt = 0;
+  for(int i=0; i<ITERATE; i++){
+    tmp_flg = 0;
+    // flg_cnt = 0;
+    for(int j=0;j<ITERATE;j++){
+      if(check_sub[i].flg[j] == 1){ // 別のITERATEとの当たりがあった
+        tmp_flg = 1; break;
+      }
+    }
+    if(tmp_flg == 1){ // 今見ているITERATEに当たりが1つでもあった場合
+      for(int j=0; j<ITERATE; j++)
+        if(check_sub[i].left[j] != -1){ // 当たったときの自分のcount数が判明したとき
+          block[i][index].flg[check_sub[i].left[j]] = 1; // 当たりだったcount値は1
+        }
+    }
+  }
+  return res;
+}
+
+/*dist_each_sub: 指定されたiterate, indexのbitをcに変換し、新たなindexの箇所に挿入する------------------*/
+void dist_each_sub(int iterate, int index, int bit, unsigned char c, unsigned char from[]){
+  int new_index = 0;
+  int data_count = 0;
+  id_char[bit] = c;
+  new_index = quad2num(id_char);
+  if(atari[new_index] == 0 && new_index <= 5555){
+    for(int i=0; i<18; i++){
+      data_count = block[iterate][new_index].count;
+      block[iterate][new_index].data[data_count][i] = from[i];
+    }
+    block[iterate][new_index].dist_plus++;
+  }else{
+    return;
+  }
+  return;
+}
+
+/*dist_each: 分配指せる箇所のiterate, index, とbitの桁を指定し、分配を行う--------------------------------*/
+void dist_each(int iterate, int index, unsigned char data[]){
+  num2quad(index);
+  for(int bit =0; bit<7; bit++){
+    if(id_char[bit] == 'A'){
+      dist_each_sub(iterate, index, bit, 'C', data);
+      dist_each_sub(iterate, index, bit, 'G', data);
+      dist_each_sub(iterate, index, bit, 'T', data);
+    }else if(id_char[bit] == 'C'){
+      dist_each_sub(iterate, index, bit, 'A', data);
+      dist_each_sub(iterate, index, bit, 'G', data);
+      dist_each_sub(iterate, index, bit, 'T', data);
+    }else if(id_char[bit] == 'G'){
+      dist_each_sub(iterate, index, bit, 'A', data);
+      dist_each_sub(iterate, index, bit, 'C', data);
+      dist_each_sub(iterate, index, bit, 'T', data);
+    }else if(id_char[bit] == 'T'){
+      dist_each_sub(iterate, index, bit, 'A', data);
+      dist_each_sub(iterate, index, bit, 'C', data);
+      dist_each_sub(iterate, index, bit, 'G', data);
+  } 
+  }
+  return;
+}
+
+/*distribute_sub: 指定されたindexにおける余ったデータを分配する----------------------------------------------*/
+void distribute_sub(int index){
+  // int flg_check = 0; // 探索中のcount値が当たりだったときに1
+  int data_count = 0;
+  for(int i=0; i<ITERATE; i++){ // 各iterateを探索
+  data_count = block[i][index].count;
+    for(int j=0; j< data_count; j++){ // 指定したindexの各count値が当たりであるか探索
+      if(block[i][index].flg[j] == 1) continue; // 当たりであればスルー
+      else{ // 外れであれば分配する必要あり
+        dist_each(i, index, block[i][index].data[j]);
+      }
+    }
+  }
+  return;
+}
+
+/*distribute: 分配を行う関数------------------------------------------------------------------------------*/
+void distribute(){
+  int check_res = 0;
+  for(int i=0; i<BLOCK_LEN; i++){
+    check_res = 0;
+    check_res = check(i);
+    if(check_res == 1) distribute_sub(i); // 当たりが含まれていれば、残りを分配する
+  }
+  return;
+}
+
+/*re_count: countを再集計*/
+void re_count(){
+  for(int i=0; i<ITERATE; i++){
+    for(int j=0; j<BLOCK_LEN; j++){
+      block[i][j].count = block[i][j].count + block[i][j].dist_plus;
+    }
   }
 }
-/* dec: デコーダ------------------------------------------------------------------------*/
+
+/*Toblock_sub: ファイルから25文字文字を読み出し、インデックスの箇所に挿入する--------------------------------*/
+void Toblock_sub(int num, int kaisu, FILE *fp){
+  unsigned char c1[7], c2[18];
+  // unsigned char dis;
+  int index = 0;
+  int cum_count =0;
+  if(num != 0 && kaisu == 0) fgetc(fp); /*改行を退避させる*/
+  for(int i=0; i<25; i++){
+    if(i<7) c1[i] = fgetc(fp);
+    else    c2[i-7] = fgetc(fp);
+  }
+  index = quad2num(c1); // インデックスを計算
+  cum_count = block[num][index].count;
+  for(int i=0; i<18; i++){ // 指定箇所にデータの書込み
+    block[num][index].data[cum_count][i] = c2[i];
+  }
+  block[num][index].count++;
+  return;
+}
+
+/*Toblock: ファイルから全ての文字列を読み出し、インデックスの箇所に挿入する-----------------------------------*/
+void Toblock(FILE *fp){
+  for(int i=0; i<ITERATE; i++){
+    for(int j=0; j<BLOCK_LEN; j++){
+      Toblock_sub(i, j, fp);
+    }
+  }
+  return;
+}
+
+/*md_sub: 4つの中から最大のものを取り出す------------------------------------------------------------------*/
+int md_sub(int a[]){
+  int index1 = 0, index2 = 2;
+  if(a[0] < a[1]){a[0] = a[1]; index1 = 1;}
+  if(a[2] < a[3]){a[2] = a[3]; index2 = 3;}
+  if(a[0] < a[2]){a[0] = a[2]; index1 = index2;}
+  if(a[0] == 0) index1 = -1;
+  return index1;
+}
+
+/* Majority: 多数決をとる関数　結果→Mdres----------------------------------------------------------------*/
+void Majority(int index){
+  int vote[4] = {0,0,0,0}; // 0→A 1→C 2→G 3→T
+  int vote_id = 0;
+  for(int i=0; i<18; i++){
+    vote[0]=0; vote[1]=0; vote[2]=0, vote[3]=0;
+    for(int j=0; j<ITERATE; j++){
+      for(int k=0; k<block[j][index].count; k++){
+        if(block[j][index].flg[k] == 1){
+          switch(block[j][index].data[k][i]){
+            case 'A': vote[0]+=WEIGHT;
+                      break;
+            case 'C': vote[1]+=WEIGHT;
+                      break;
+            case 'G': vote[2]+=WEIGHT;
+                      break;
+            case 'T': vote[3]+=WEIGHT;
+                      break;
+            default : break;
+          } 
+        }else{
+          switch(block[j][index].data[k][i]){
+            case 'A': vote[0]++;
+                      break;
+            case 'C': vote[1]++;
+                      break;
+            case 'G': vote[2]++;
+                      break;
+            case 'T': vote[3]++;
+                      break;
+            default : break;
+          }
+        }  
+      }
+    }
+    vote_id = md_sub(vote);
+    if(vote_id == -1) mdres[i] = 'A';
+    if(vote_id == 0) mdres[i] = 'A';
+    else if(vote_id == 1) mdres[i] = 'C';
+    else if(vote_id == 2) mdres[i] = 'G';
+    else if(vote_id == 3) mdres[i] = 'T';
+  }
+  return;
+}
+
+
+/* dec: デコーダ---------------------------------------------------------------------------------*/
 int dec(){
   FILE *sfp;
   if((sfp = fopen(SEQDATA, "r")) ==NULL){
@@ -180,98 +377,32 @@ int dec(){
     fprintf(stderr, "cannot open %s\n", DECDATA);
     exit(1);
   }
+  
+  init_block(); //blockの初期化
+  Toblock(sfp); // 文字列をblockに格納
+  distribute(); // 当たりがあるか判定し、当たりがあった場所の余りのデータは分配する
+  re_count();
+  for(int i=0; i<BLOCK_LEN; i++){ // 分配後、前のcheckで外れ判定を受けた箇所に、再度checkを行う
+    if(atari[i] == 0)
+      check(i);
+  }
 
+  // ATGCから01に直していく
   unsigned char c1, c2, res;
-  int flg = 0; // 前の入力が共に正常と判断すれば0 エラーが確認できれば1
-  int cnt=0;
-  int i=0;
-  while(1){
-    if(flg == 0){
-      c1 = getc(sfp);
-      if(c1 == '\n') break;
-      c2 = getc(sfp);
-      if(c2 == '\n') break;
-    }else if(flg == 1){
-      c1 = c2;
-      c2 = getc(sfp);
-      if(c2 == '\n') break;
+  int all_count=0;
+  for(int m=0; m<BLOCK_LEN; m++){
+    Majority(m); // 重み付き多数決で文字を決定する
+    for(int n=0; n<18; n++){
+       c1 = ATGC2c1(mdres[n]);
+       c2 = ATGC2c2(mdres[n]);
+       fputc(c1, dfp);
+       fputc(c2, dfp);
+       all_count+=2;
+       if(all_count == DATA_LEN)
+        break;
     }
-    
-    if(c1 == 'A' && c2 == 'T'){
-      fir[cnt] = 0;
-      cnt++; flg = 0;
-    }else if(c1 == 'G' && c2 == 'C'){
-      fir[cnt] = 1;
-      cnt++; flg = 0;
-    }else if(((c1=='A'&& c2 !='T') || (c1=='G' && c2!='C')) || (c1=='T' || c1=='C')){
-      fir[cnt] = ERROR; // 3はエラー発生箇所
-      cnt++; flg = 1;
-    }   
   }
-  fir_len = cnt;
-  printf("fir_len: %d\n", fir_len);
-  cnt = 0;
-  while(1){
-    if(flg == 0){
-      c1 = getc(sfp);
-      if(c1 == '\n') break;
-      c2 = getc(sfp);
-      if(c2 == '\n') break;
-    }else if(flg == 1){
-      c1 = c2;
-      c2 = getc(sfp);
-      if(c2 == '\n') break;
-    }
-    
-    if(c1 == 'A' && c2 == 'T'){
-      sec[cnt] = 0;
-      cnt++; flg = 0;
-    }else if(c1 == 'G' && c2 == 'C'){
-      sec[cnt] = 1;
-      cnt++; flg = 0;
-    }else if(((c1=='A'&&c2 !='T') || (c1=='G' && c2!='C')) || (c1=='T' || c1=='C')){
-      sec[cnt] = ERROR; // 3はエラー発生箇所
-      cnt++; flg = 1;
-    }   
-  }
-  sec_len = cnt;
-  printf("sec_len: %d\n", sec_len);
-  int data_len=fir_len;
 
-  if(sec_len < fir_len) data_len = sec_len; 
-  int co_null_cnt=0;
-  // 2本のデータを互いに参照し、エラーに対応する------------------------------------------
-  revise(fir, sec);
-  printf("double_null_count: %d\n", double_null_cnt);
-  fir_len = fir_len - fir_null;
-  sec_len = sec_len - sec_null;
-  data_len = fir_len;
-  if(sec_len < fir_len) data_len = sec_len;
-  int dis = data_len -ORGDATA_LEN;
-  int data_cnt = 0;
-  for(i=0; i<data_len; i++){
-    if(fir[i]==0) res = '0';
-    else if(fir[i]==1) res = '1';
-    else if(fir[i]==DELETE) continue;
-    else if(fir[i]==UNJUDGE){
-      if(double_null_cnt>0 && dis>0){
-        res = '0';
-        double_null_cnt--;
-        dis--;
-      }else{
-        continue;
-      }
-    }
-    data_cnt++;
-    fputc(res, dfp);
-  }
-  printf("revised fir length: %d\n", fir_len);
-  printf("revised sec length: %d\n", sec_len);
-  printf("data_cnt: %d\n", data_cnt);
-  int nokori = ORGDATA_LEN - data_cnt;
-  for(i=0; i<nokori; i++){
-    fputc('0', dfp);
-  }
   res = '\n';
   fputc(res, dfp);
     
