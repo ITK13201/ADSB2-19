@@ -2,33 +2,25 @@
 
 ブロック(25文字)の通し番号をindexと表記します。indexごとにデータを専用の配列に振り分けます。各ブロックにおけるindexエラーは40%以上なので、各indexには複数のデータが集まる場合もあり、その逆もあります。そのため、一旦全てのデータを振り分けたのち、あたりには印をつけた上で、重み付きの多数決を取ります
 <br>
-評価：コストとハミング距離だけ
-<br>
 ITERATE: 生成する行数, hamming distance: ハミング距離
 <br>
 ITERATE = 3  hamming distance = 30000
 <br>
-ITERATE = 4  hamming distance = 22000
+ITERATE = 4  hamming distance = 17000
 <br>
-ITERATE = 5  hamming distance = 17585
+ITERATE = 5  hamming distance = 11000
 <br>
-ITERATE = 10 hamming distance = 4395
+ITERATE = 10 hamming distance = 1342
 <br>
-ITERATE = 15 hamming distance = 1400
+ITERATE = 20 hamming distance = 59
 <br>
-ITERATE = 20 hamming distance = 439
+ITERATE = 25 hamming distance = 19 実行時間 0.918s
 <br>
-ITERATE = 25 hamming distance = 121
-<br>
-ITERATE = 30 hamming distance = 39
-<br>
-ITERATE = 35 hamming distance = 19
+ITERATE = 30 hamming distance = 5 実行時間 1.343s
 <br>
 ITERATE = 40 hamming distance = 2
 <br>
-ITERATE = 45 hamming distance = 2
-<br>
-ITERATE = 50 hamming distance = 0
+ITERATE = 45 hamming distance = 0 実行時間 2.505s
 <br>
 ベンチマーク用でもコスト捨てるとハミング距離0になります()
 
@@ -43,7 +35,7 @@ ITERATE = 50 hamming distance = 0
 <br>
 (行数3)  cost: 84   hamming distance = 34000 実行時間： 0.196s, 0.125s, 0.031s
 <br>
-(行数10) cost:280   hamming distance = 1462 (改善) 実行時間: 0.758s, 0.422s, 0.297s
+(行数10) cost:280   hamming distance = 1462  実行時間: 0.758s, 0.422s, 0.297s
 <br>
 (行数17) cost: 476  hamming distance = 119  (改善) 実行時間: 0.1284s 0.703s 0.547s
 
