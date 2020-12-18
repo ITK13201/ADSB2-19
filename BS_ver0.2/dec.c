@@ -1,4 +1,12 @@
-一の箇所を読み取ったデータであると判定するハミング距離の閾値
+#pragma GCC optimize("Ofast")
+
+#include <stdio.h>
+#include <stdlib.h>
+#include "grpwk20.h"
+#define BLOCK_LEN 5556
+#define DATA_LEN 200000
+#define ITERATE 17 // 読み取る行数
+#define JUDGE 8  // 同一の箇所を読み取ったデータであると判定するハミング距離の閾値
 #define OVER  1000 // 1つのindexに重複できるデータの個数
 #define OVER_sub 1000 // check関数用
 #define WEIGHT 10  // 多数決決定法において当たりと判定されたものに付ける重み
