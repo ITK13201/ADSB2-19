@@ -9,10 +9,9 @@
 #define N 5
 #define M 13
 
+unsigned char dp[M+1][M+1];
+
 inline static unsigned char edis(unsigned char *S,unsigned char *T){
-  unsigned char dp[M+1][M+1];
-  rep(i,M+1) dp[i][0]=i;
-  rep(i,M) dp[0][i+1]=i+1;
   for(int i=1;i<=M;i++) for(int j=1;j<=M;j++){
     int min;
     min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
@@ -35,6 +34,8 @@ int dec(){
     fprintf(stderr, "cannot open %s\n", DECDATA);
     exit(1);
   }
+  rep(i,M+1) dp[i][0]=i;
+  rep(i,M) dp[0][i+1]=i+1;
 
   unsigned char c, res;
   int cur;
@@ -64,8 +65,7 @@ int dec(){
     }
     for(int j=cur;j<202000;j++) S[i][j]=4;
   }
-  int pt[N];
-  rep(i,N) pt[i]=0;
+  int pt[N]={};
   unsigned char now[N];
   int zero,one,wrong;
   unsigned char base[M+3];
