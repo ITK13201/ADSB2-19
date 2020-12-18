@@ -41,11 +41,11 @@ ITERATE = 50 hamming distance = 0
 性能：
 プログラムの都合上、生成できる行数が最大で17でした(アルゴリズムをうまいこと変えればこの問題は解決できそうですが、、)
 <br>
-(行数3)  cost: 84   hamming distance = 34000
+(行数3)  cost: 84   hamming distance = 34000 実行時間： 0.196s, 0.125s, 0.031s
 <br>
-(行数10) cost:280   hamming distance = 1462 (改善)
+(行数10) cost:280   hamming distance = 1462 (改善) 実行時間: 0.758s, 0.422s, 0.297s
 <br>
-(行数17) cost: 476  hamming distance = 119  (改善)
+(行数17) cost: 476  hamming distance = 119  (改善) 実行時間: 0.1284s 0.703s 0.547s
 
 実行：
 ITERATEで引き出す行数を指定できます。  ./test.sh ITERATE 0 0 0 0 0
