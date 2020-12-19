@@ -7,7 +7,7 @@
 #define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
 #define max(a,b) a>b?a:b
 #define N 5
-#define M 13
+#define M 13 
 
 unsigned char dp[M+1][M+1];
 
@@ -83,6 +83,10 @@ int dec(){
     }
     if(zero>=one) fputc('0',dfp),wrong=1;
     else fputc('1',dfp),wrong=0;
+    if(zero==N || one==N){
+      rep(j,N) pt[j]++;
+      continue;
+    }
     rep(j,M+3){
       int n[5]={};
       rep(k,N){
