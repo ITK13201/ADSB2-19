@@ -6,20 +6,29 @@
 #pragma GCC optimize("unroll-loops")
 #define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
 #define max(a,b) a>b?a:b
-#define N 5
-#define M 13 
+#define N 4
+#define M 15 
 
 unsigned char dp[M+1][M+1];
 
 inline static unsigned char edis(unsigned char *S,unsigned char *T){
   for(int i=1;i<=M;i++) for(int j=1;j<=M;j++){
-    int min;
-    min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
+    int min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
     if(dp[i-1][j]+1<min) min=dp[i-1][j]+1;
     if(dp[i][j-1]+1<min) min=dp[i][j-1]+1;
     dp[i][j]=min;
   }
   return dp[M][M];
+}
+
+inline static unsigned char edis2(unsigned char *S,unsigned char *T,int m){
+  for(int i=1;i<=m;i++) for(int j=1;j<=m;j++){
+    int min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
+    if(dp[i-1][j]+1<min) min=dp[i-1][j]+1;
+    if(dp[i][j-1]+1<min) min=dp[i][j-1]+1;
+    dp[i][j]=min;
+  }
+  return dp[m][m];
 }
 
 int dec(){
@@ -87,23 +96,45 @@ int dec(){
       rep(j,N) pt[j]++;
       continue;
     }
+    int fail[N]={};
+    int cut=0;
     rep(j,M+3){
       int n[5]={};
       rep(k,N){
-        if(S[k][pt[k]+j]==4) n[4]++;
-        else if(wrong){
-          if(now[k]>=2) continue;
-          if(((S[k][pt[k]+j])&1)^((i+j)&1)) continue;
+        if(S[k][pt[k]+j]==4){
+          n[4]++;
+          continue;
+        }
+        if(fail[k]) continue;
+        if(wrong){
+          if(now[k]>=2){
+            fail[k]=1;
+            continue;
+          }
+          if(((S[k][pt[k]+j])&1)^((i+j)&1)){
+            fail[k]=1;
+            continue;
+          }
           n[S[k][pt[k]+j]]++;
         }
         else{
-          if(now[k]<2) continue;
-          if(((S[k][pt[k]+j])&1)^((i+j)&1)) continue;
+          if(now[k]<2){
+            fail[k]=1;
+            continue;
+          }
+          if(((S[k][pt[k]+j])&1)^((i+j)&1)){
+            fail[k]=1;
+            continue;
+          }
           n[S[k][pt[k]+j]]++;
         }
       }
       int plc=0,maxi=0;
       rep(k,5) if(n[k]>maxi) plc=k,maxi=n[k];
+      if(maxi==0 && j>3){
+        cut=j;
+        break;
+      }
       base[j]=plc;
     }
     unsigned char* p=base;
@@ -113,13 +144,24 @@ int dec(){
         if(now[j]<2 && !((now[j]&1)^(i&1))) continue;
         unsigned char *p2=&S[j][pt[j]+1];
         unsigned char diff[6];
-        diff[0]=edis(p,p2);
-        diff[1]=edis(p,++p2);
-        diff[2]=edis(p,++p2);
-        p2=&S[j][pt[j]];
-        diff[3]=edis(++p,p2);
-        diff[4]=edis(++p,p2);
-        diff[5]=edis(++p,p2);
+        if(cut){
+          diff[0]=edis2(p,p2,cut-3);
+          diff[1]=edis2(p,++p2,cut-3);
+          diff[2]=edis2(p,++p2,cut-3);
+          p2=&S[j][pt[j]];
+          diff[3]=edis2(++p,p2,cut-3);
+          diff[4]=edis2(++p,p2,cut-3);
+          diff[5]=edis2(++p,p2,cut-3);
+        }
+        else{
+          diff[0]=edis(p,p2);
+          diff[1]=edis(p,++p2);
+          diff[2]=edis(p,++p2);
+          p2=&S[j][pt[j]];
+          diff[3]=edis(++p,p2);
+          diff[4]=edis(++p,p2);
+          diff[5]=edis(++p,p2);
+        }
         int mini=2*M,use=0;
         rep(k,6) if(mini>diff[k]) mini=diff[k],use=k;
         if(use==0) pt[j]++;
@@ -133,13 +175,24 @@ int dec(){
         if(now[j]>=2 && !((now[j]&1)^(i&1))) continue;
         unsigned char *p2=&S[j][pt[j]+1];
         unsigned char diff[6];
-        diff[0]=edis(p,p2);
-        diff[1]=edis(p,++p2);
-        diff[2]=edis(p,++p2);
-        p2=&S[j][pt[j]];
-        diff[3]=edis(++p,p2);
-        diff[4]=edis(++p,p2);
-        diff[5]=edis(++p,p2);
+        if(cut){
+          diff[0]=edis2(p,p2,cut-3);
+          diff[1]=edis2(p,++p2,cut-3);
+          diff[2]=edis2(p,++p2,cut-3);
+          p2=&S[j][pt[j]];
+          diff[3]=edis2(++p,p2,cut-3);
+          diff[4]=edis2(++p,p2,cut-3);
+          diff[5]=edis2(++p,p2,cut-3);
+        }
+        else{
+          diff[0]=edis(p,p2);
+          diff[1]=edis(p,++p2);
+          diff[2]=edis(p,++p2);
+          p2=&S[j][pt[j]];
+          diff[3]=edis(++p,p2);
+          diff[4]=edis(++p,p2);
+          diff[5]=edis(++p,p2);
+        }
         int mini=2*M,use=0;
         rep(k,6) if(mini>diff[k]) mini=diff[k],use=k;
         if(use==0) pt[j]++;
@@ -152,7 +205,7 @@ int dec(){
     }
     rep(j,N){
       pt[j]++;
-      if(pt[j]>=201900) pt[j]=201000;
+      if(pt[j]>=201900) pt[j]=200500;
     } 
   }
   int last[4]={};
