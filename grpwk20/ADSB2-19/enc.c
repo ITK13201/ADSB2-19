@@ -21,7 +21,6 @@ int enc(){
   char c1=getc(ofp),c2=getc(ofp);
   int pt=(c1-'0')*2+(c2-'0');
   fputc(pt==0?'A':pt==1?'T':pt==2?'G':'C',efp);
-  fputc('A',efp);
   fputc('\n', efp);
   fclose(ofp),fclose(efp);
   return(0);
