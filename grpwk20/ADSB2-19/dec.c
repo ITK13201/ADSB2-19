@@ -8,7 +8,7 @@
 #define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
 #define max(a,b) a>b?a:b
 #define N 4
-#define M 14
+#define M 13
 
 int dp[M+1][M+1];
 
@@ -21,18 +21,15 @@ inline static int edis(unsigned char *S,unsigned char *T){
     }
   }
   if(chk) return 0;
-  int *p=&dp[1][1];
   for(int i=1;i<=M;i++){
     for(int j=1;j<=M;j++){
       int min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
       if(dp[i-1][j]+1<min) min=dp[i-1][j]+1;
       if(dp[i][j-1]+1<min) min=dp[i][j-1]+1;
-      *p++=min;
+      dp[i][j]=min;
     }
-    p++;
   }
-  p--,p--;
-  return *p;
+  return dp[M][M];
 }
 
 inline static int edis2(unsigned char *S,unsigned char *T,int m){
@@ -44,18 +41,15 @@ inline static int edis2(unsigned char *S,unsigned char *T,int m){
     }
   }
   if(chk) return 0;
-  int *p=&dp[1][1];
   for(int i=1;i<=m;i++){
     for(int j=1;j<=m;j++){
       int min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
       if(dp[i-1][j]+1<min) min=dp[i-1][j]+1;
       if(dp[i][j-1]+1<min) min=dp[i][j-1]+1;
-      *p++=min;
+      dp[i][j]=min;
     }
-    p++;
   }
-  p--,p--;
-  return *p;
+  return dp[m][m];
 }
 
 int dec(){
@@ -76,7 +70,7 @@ int dec(){
   unsigned char c, res;
   int cur;
   unsigned char S[N][202000];
-  unsigned char ans[200000];
+  char ans[200001];
   rep(i,N){
     cur=0;
     while((c = getc(sfp)) != '\n'){
@@ -118,8 +112,10 @@ int dec(){
       else if(now[j]&2 && !((i&1)^(now[j]&1))) one++;
       else if(!(now[j]&2) && !((i&1)^(now[j]&1))) zero++;
     }
-    //if(zero>=one) fputc('0',dfp),wrong=1;
-    //else fputc('1',dfp),wrong=0;
+    if(zero+one==0){
+      rep(j,N) pt[j]++;
+      continue;
+    }
     if(zero>=one) ans[i]='0',wrong=1;
     else ans[i]='1',wrong=0;
     if(zero==N || one==N){
@@ -179,25 +175,29 @@ int dec(){
             pt[j]++;
             continue;
           }
-          if((diff[3]=edis2(++p,--p2,cut-3))==0){
+          p+=1,p2-=1;
+          if((diff[1]=edis2(p,p2,cut-3))==0){
             pt[j]--;
             continue;
           }
-          p2++;
-          if((diff[1]=edis2(--p,++p2,cut-3))==0){
+          p--;
+          if(edis2(p,p2,cut-3)==1) continue;
+          p2+=2;
+          if((diff[2]=edis2(p,p2,cut-3))==0){
             pt[j]+=2;
             continue;
           }
-          if((diff[2]=edis2(p,++p2,cut-3))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p2=&S[j][pt[j]];
-          p++;
-          if((diff[4]=edis2(++p,p2,cut-3))==0){
+          p+=2,p2-=2;
+          if((diff[3]=edis2(p,++p2,cut-3))==0){
             pt[j]-=2;
             continue;
           }
+          p-=2,p2+=3;
+          if((diff[4]=edis2(++p,p2,cut-3))==0){
+            pt[j]+=3;
+            continue;
+          }
+          p+=3,p2-=3;
           if((diff[5]=edis2(++p,p2,cut-3))==0){
             pt[j]=-3;
             continue;
@@ -208,26 +208,30 @@ int dec(){
             pt[j]++;
             continue;
           }
-          if((diff[3]=edis(++p,--p2))==0){
+          p+=1,p2-=1;
+          if((diff[1]=edis(p,p2))==0){
             pt[j]--;
             continue;
           }
-          p--,p2++;
-          if((diff[1]=edis(p,++p2))==0){
+          p--;
+          if(edis(p,p2)==1) continue;
+          p2+=2;
+          if((diff[2]=edis(p,p2))==0){
             pt[j]+=2;
             continue;
           }
-          if((diff[2]=edis(p,++p2))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p2=&S[j][pt[j]];
-          p++;
-          if((diff[4]=edis(++p,p2))==0){
+          p+=2,p2-=2;
+          if((diff[3]=edis(p,p2))==0){
             pt[j]-=2;
             continue;
           }
-          if((diff[5]=edis(++p,p2))==0){
+          p-=2,p2+=3;
+          if((diff[4]=edis(p,p2))==0){
+            pt[j]+=3;
+            continue;
+          }
+          p+=3,p2-=3;
+          if((diff[5]=edis(p,p2))==0){
             pt[j]=-3;
             continue;
           }
@@ -235,10 +239,10 @@ int dec(){
         int mini=2*M,use=0;
         rep(k,6) if(mini>diff[k]) mini=diff[k],use=k;
         if(use==0) pt[j]++;
-        else if(use==3) pt[j]--;
-        else if(use==1) pt[j]+=2;
-        else if(use==4) pt[j]-=2;
-        else if(use==2) pt[j]+=3;
+        else if(use==1) pt[j]--;
+        else if(use==2) pt[j]+=2;
+        else if(use==3) pt[j]-=2;
+        else if(use==4) pt[j]+=3;
         else pt[j]-=3;
       }
       else{
@@ -250,25 +254,29 @@ int dec(){
             pt[j]++;
             continue;
           }
-          if((diff[3]=edis2(++p,--p2,cut-3))==0){
+          p+=1,p2-=1;
+          if((diff[1]=edis2(p,p2,cut-3))==0){
             pt[j]--;
             continue;
           }
-          p2++;
-          if((diff[1]=edis2(--p,++p2,cut-3))==0){
+          p--;
+          if(edis2(p,p2,cut-3)==1) continue;
+          p2+=2;
+          if((diff[2]=edis2(p,p2,cut-3))==0){
             pt[j]+=2;
             continue;
           }
-          if((diff[2]=edis2(p,++p2,cut-3))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p2=&S[j][pt[j]];
-          p++;
-          if((diff[4]=edis2(++p,p2,cut-3))==0){
+          p+=2,p2-=2;
+          if((diff[3]=edis2(p,++p2,cut-3))==0){
             pt[j]-=2;
             continue;
           }
+          p-=2,p2+=3;
+          if((diff[4]=edis2(++p,p2,cut-3))==0){
+            pt[j]+=3;
+            continue;
+          }
+          p+=3,p2-=3;
           if((diff[5]=edis2(++p,p2,cut-3))==0){
             pt[j]=-3;
             continue;
@@ -279,26 +287,30 @@ int dec(){
             pt[j]++;
             continue;
           }
-          if((diff[3]=edis(++p,--p2))==0){
+          p+=1,p2-=1;
+          if((diff[1]=edis(p,p2))==0){
             pt[j]--;
             continue;
           }
-          p--,p2++;
-          if((diff[1]=edis(p,++p2))==0){
+          p--;
+          if(edis(p,p2)==1) continue;
+          p2+=2;
+          if((diff[2]=edis(p,p2))==0){
             pt[j]+=2;
             continue;
           }
-          if((diff[2]=edis(p,++p2))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p2=&S[j][pt[j]];
-          p++;
-          if((diff[4]=edis(++p,p2))==0){
+          p+=2,p2-=2;
+          if((diff[3]=edis(p,p2))==0){
             pt[j]-=2;
             continue;
           }
-          if((diff[5]=edis(++p,p2))==0){
+          p-=2,p2+=3;
+          if((diff[4]=edis(p,p2))==0){
+            pt[j]+=3;
+            continue;
+          }
+          p+=3,p2-=3;
+          if((diff[5]=edis(p,p2))==0){
             pt[j]=-3;
             continue;
           }
@@ -306,10 +318,10 @@ int dec(){
         int mini=2*M,use=0;
         rep(k,6) if(mini>diff[k]) mini=diff[k],use=k;
         if(use==0) pt[j]++;
-        else if(use==3) pt[j]--;
-        else if(use==1) pt[j]+=2;
-        else if(use==4) pt[j]-=2;
-        else if(use==2) pt[j]+=3;
+        else if(use==1) pt[j]--;
+        else if(use==2) pt[j]+=2;
+        else if(use==3) pt[j]-=2;
+        else if(use==4) pt[j]+=3;
         else pt[j]-=3;
       }
     }
@@ -325,15 +337,10 @@ int dec(){
   char c2=ls&1;
   ls/=2;
   char c1=ls;
-  unsigned char* lp=ans;
-  rep(i,199998) fputc(*lp++,dfp);
-  fputc('0'+c1,dfp);
-  fputc('0'+c2,dfp);
-  /*rep(i,N){
-    printf("%d ",pt[i]);
-  }*/
-  res = '\n';
-  fputc(res, dfp); 
+  ans[199998]='0'+c1;
+  ans[199999]='0'+c2;
+  ans[200000]= '\n';
+  fputs(ans, dfp); 
   fclose(sfp);
   fclose(dfp);
   return(0);
