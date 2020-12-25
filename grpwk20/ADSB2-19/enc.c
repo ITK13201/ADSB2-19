@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "grpwk20.h"
 #pragma GCC optimize("Ofast")
 #pragma GCC target("avx2")
@@ -17,11 +18,18 @@ int enc(){
     fprintf(stderr, "cannot open %s\n", ENCDATA);
     exit(1);
   }
-  rep(i,199998) fputc(getc(ofp)=='1'?i&1?'C':'G':i&1?'T':'A',efp);
-  char c1=getc(ofp),c2=getc(ofp);
-  int pt=(c1-'0')*2+(c2-'0');
-  fputc(pt==0?'A':pt==1?'T':pt==2?'G':'C',efp);
-  fputc('\n', efp);
+  char in[200001];
+  char out[200000];
+  fgets(in,200001,ofp);
+  char *ip=in,*op=out;
+  rep(i,99999){
+    *op++=(*ip++=='1'?'G':'A');
+    *op++=(*ip++=='1'?'C':'T');
+  }
+  int pt=(in[199998]-'0')*2+(in[199999]-'0');
+  out[199998]=(pt==0?'A':pt==1?'T':pt==2?'G':'C');
+  out[199999]='\n';
+  fputs(out,efp);
   fclose(ofp),fclose(efp);
   return(0);
 }
