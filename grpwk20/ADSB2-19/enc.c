@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include "grpwk20.h"
 #pragma GCC optimize("Ofast")
 #pragma GCC target("avx2")
 #pragma GCC optimize("unroll-loops")
-#define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
+#define rep(i,n) for(register int (i)=0;(i)<(n);(i)++)
 
 int enc(){
   FILE *ofp;
@@ -18,18 +17,19 @@ int enc(){
     fprintf(stderr, "cannot open %s\n", ENCDATA);
     exit(1);
   }
-  char in[200001];
-  char out[200000];
-  fgets(in,200001,ofp);
-  char *ip=in,*op=out;
+  setvbuf(ofp,NULL,_IOFBF,1048576);
+  setvbuf(efp,NULL,_IOFBF,1048576);
+  char in[200000],out[200000];
+  fread(in,sizeof(char),200000,ofp);
   rep(i,99999){
-    *op++=(*ip++=='1'?'G':'A');
-    *op++=(*ip++=='1'?'C':'T');
+    out[(i<<1)]=(in[(i<<1)]=='1'?'G':'A');
+    out[(i<<1)+1]=(in[(i<<1)+1]=='1'?'C':'T');
   }
-  int pt=(in[199998]-'0')*2+(in[199999]-'0');
+  char c1=in[199998],c2=in[199999];
+  int pt=(c1-'0')*2+(c2-'0');
   out[199998]=(pt==0?'A':pt==1?'T':pt==2?'G':'C');
   out[199999]='\n';
-  fputs(out,efp);
+  fwrite(out,sizeof(char),200000,efp);
   fclose(ofp),fclose(efp);
   return(0);
 }
