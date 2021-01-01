@@ -5,7 +5,7 @@
 #pragma GCC optimize("Ofast")
 #pragma GCC target("avx2")
 #pragma GCC optimize("unroll-loops")
-#define rep(i,n) for(int (i)=0;(i)<(n);(i)++)
+#define rep(i,n) for(register int (i)=0;(i)<(n);(i)++)
 #define max(a,b) a>b?a:b
 #define N 4
 #define M 13
@@ -14,15 +14,15 @@ int dp[M+1][M+1];
 
 inline static int edis(unsigned char *S,unsigned char *T){
   bool chk=true;
-  rep(i,M){
+  for(register int i=M-1;i>=0;i--){
     if(S[i]!=T[i]){
       chk=false;
       break;
     }
   }
   if(chk) return 0;
-  for(int i=1;i<=M;i++){
-    for(int j=1;j<=M;j++){
+  for(register int i=1;i<=M;i++){
+    for(register int j=1;j<=M;j++){
       int min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
       if(dp[i-1][j]+1<min) min=dp[i-1][j]+1;
       if(dp[i][j-1]+1<min) min=dp[i][j-1]+1;
@@ -34,15 +34,15 @@ inline static int edis(unsigned char *S,unsigned char *T){
 
 inline static int edis2(unsigned char *S,unsigned char *T,int m){
   bool chk=true;
-  rep(i,m){
+  for(register int i=m-1;i>=0;i--){
     if(S[i]!=T[i]){
       chk=false;
       break;
     }
   }
   if(chk) return 0;
-  for(int i=1;i<=m;i++){
-    for(int j=1;j<=m;j++){
+  for(register int i=1;i<=m;i++){
+    for(register int j=1;j<=m;j++){
       int min=dp[i-1][j-1]+(S[i-1]==T[j-1]?0:1);
       if(dp[i-1][j]+1<min) min=dp[i-1][j]+1;
       if(dp[i][j-1]+1<min) min=dp[i][j-1]+1;
@@ -169,7 +169,7 @@ int dec(){
       if(wrong){
         if(now[j]<2 && !((now[j]&1)^(i&1))) continue;
         unsigned char *p2=&S[j][pt[j]+1];
-        int diff[6];
+        int diff[4];
         if(cut){
           if((diff[0]=edis2(p,p2,cut-3))==0){
             pt[j]++;
@@ -190,16 +190,6 @@ int dec(){
           p+=2,p2-=2;
           if((diff[3]=edis2(p,++p2,cut-3))==0){
             pt[j]-=2;
-            continue;
-          }
-          p-=2,p2+=3;
-          if((diff[4]=edis2(++p,p2,cut-3))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p+=3,p2-=3;
-          if((diff[5]=edis2(++p,p2,cut-3))==0){
-            pt[j]=-3;
             continue;
           }
         }
@@ -225,30 +215,18 @@ int dec(){
             pt[j]-=2;
             continue;
           }
-          p-=2,p2+=3;
-          if((diff[4]=edis(p,p2))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p+=3,p2-=3;
-          if((diff[5]=edis(p,p2))==0){
-            pt[j]=-3;
-            continue;
-          }
         }
-        int mini=2*M,use=0;
-        rep(k,6) if(mini>diff[k]) mini=diff[k],use=k;
+        int mini=M,use=0;
+        rep(k,4) if(mini>diff[k]) mini=diff[k],use=k;
         if(use==0) pt[j]++;
         else if(use==1) pt[j]--;
         else if(use==2) pt[j]+=2;
-        else if(use==3) pt[j]-=2;
-        else if(use==4) pt[j]+=3;
-        else pt[j]-=3;
+        else pt[j]-=2;
       }
       else{
         if(now[j]>=2 && !((now[j]&1)^(i&1))) continue;
         unsigned char *p2=&S[j][pt[j]+1];
-        int diff[6];
+        int diff[4];
         if(cut){
           if((diff[0]=edis2(p,p2,cut-3))==0){
             pt[j]++;
@@ -269,16 +247,6 @@ int dec(){
           p+=2,p2-=2;
           if((diff[3]=edis2(p,++p2,cut-3))==0){
             pt[j]-=2;
-            continue;
-          }
-          p-=2,p2+=3;
-          if((diff[4]=edis2(++p,p2,cut-3))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p+=3,p2-=3;
-          if((diff[5]=edis2(++p,p2,cut-3))==0){
-            pt[j]=-3;
             continue;
           }
         }
@@ -304,25 +272,13 @@ int dec(){
             pt[j]-=2;
             continue;
           }
-          p-=2,p2+=3;
-          if((diff[4]=edis(p,p2))==0){
-            pt[j]+=3;
-            continue;
-          }
-          p+=3,p2-=3;
-          if((diff[5]=edis(p,p2))==0){
-            pt[j]=-3;
-            continue;
-          }
+          int mini=M,use=0;
+          rep(k,4) if(mini>diff[k]) mini=diff[k],use=k;
+          if(use==0) pt[j]++;
+          else if(use==1) pt[j]--;
+          else if(use==2) pt[j]+=2;
+          else pt[j]-=2;
         }
-        int mini=2*M,use=0;
-        rep(k,6) if(mini>diff[k]) mini=diff[k],use=k;
-        if(use==0) pt[j]++;
-        else if(use==1) pt[j]--;
-        else if(use==2) pt[j]+=2;
-        else if(use==3) pt[j]-=2;
-        else if(use==4) pt[j]+=3;
-        else pt[j]-=3;
       }
     }
     rep(j,N){
