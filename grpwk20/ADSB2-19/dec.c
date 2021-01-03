@@ -188,7 +188,7 @@ int dec(){
             continue;
           }
           p+=2,p2-=2;
-          if((diff[3]=edis2(p,++p2,cut-3))==0){
+          if((diff[3]=edis2(p,p2,cut-3))==0){
             pt[j]-=2;
             continue;
           }
@@ -245,7 +245,7 @@ int dec(){
             continue;
           }
           p+=2,p2-=2;
-          if((diff[3]=edis2(p,++p2,cut-3))==0){
+          if((diff[3]=edis2(p,p2,cut-3))==0){
             pt[j]-=2;
             continue;
           }
