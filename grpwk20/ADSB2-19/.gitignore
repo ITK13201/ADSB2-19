@@ -1,0 +1,6 @@
+*
+!/**/
+!.gitignore
+!enc.c
+!dec.c
+!readme.txt
