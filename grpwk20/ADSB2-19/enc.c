@@ -33,7 +33,6 @@ int enc(){
   fclose(ofp),fclose(efp);
   return(0);
 }
-
 int main(){
   enc();
   return(0);
