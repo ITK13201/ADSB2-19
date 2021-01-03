@@ -195,6 +195,7 @@ int dec()
                         fail[k] = 1;
                         continue;
                     }
+                    // インデックスとその値の偶奇が一致していなければ足切り
                     if (((S[k][pt[k] + j]) & 1) ^ ((i + j) & 1))
                     {
                         fail[k] = 1;
@@ -210,6 +211,7 @@ int dec()
                         fail[k] = 1;
                         continue;
                     }
+                    // インデックスとその値の偶奇が一致していなければ足切り
                     if (((S[k][pt[k] + j]) & 1) ^ ((i + j) & 1))
                     {
                         fail[k] = 1;
@@ -220,25 +222,30 @@ int dec()
             }
             int plc = 0, maxi = 0;
             rep(k, 5) if (n[k] > maxi) plc = k, maxi = n[k];
+            // 空列(4)のみの場合，cutに差分を保存して足切り
             if (maxi == 0 && j > 3)
             {
                 cut = j;
                 break;
             }
+            // 最も多い値を保存
             base[j] = plc;
         }
         rep(j, N)
         {
             if (now[j] == 4)
                 continue;
+            // 差分多数決で決定した文字列
             unsigned char *p = base;
             // 多数決で0 or 1の場合
             if (wrong)
             {
+                // 一致
                 if (now[j] < 2 && !((now[j] & 1) ^ (i & 1)))
                     continue;
                 unsigned char *p2 = &S[j][pt[j] + 1];
                 int diff[4];
+                // 差分が0文字以外
                 if (cut)
                 {
                     if ((diff[0] = edis2(p, p2, cut - 3)) == 0)
@@ -268,6 +275,7 @@ int dec()
                         continue;
                     }
                 }
+                // 差分が0文字
                 else
                 {
                     if ((diff[0] = edis(p, p2)) == 0)
@@ -311,10 +319,12 @@ int dec()
             // 多数決で2 or 3の場合
             else
             {
+                // 一致
                 if (now[j] >= 2 && !((now[j] & 1) ^ (i & 1)))
                     continue;
                 unsigned char *p2 = &S[j][pt[j] + 1];
                 int diff[4];
+                // 差分が0文字以外
                 if (cut)
                 {
                     if ((diff[0] = edis2(p, p2, cut - 3)) == 0)
@@ -344,6 +354,7 @@ int dec()
                         continue;
                     }
                 }
+                // 差分が0文字
                 else
                 {
                     if ((diff[0] = edis(p, p2)) == 0)
