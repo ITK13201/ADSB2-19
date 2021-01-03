@@ -90,11 +90,17 @@ int dec()
     int cur;
     unsigned char S[N][202000];
     char ans[200001];
+    // N回読み出したものをdecodeする
+    // S[0]: 0回目のdecode
+    // ...
+    // S[N-1]: N-1回目のdecode
     rep(i, N)
     {
         cur = 0;
         while ((c = getc(sfp)) != '\n')
         {
+            // decode 
+            // (A, T, G, C) = (0, 1, 2, 3)
             switch (c)
             {
             case BASE_A:
@@ -116,6 +122,7 @@ int dec()
             S[i][cur] = res;
             cur++;
         }
+        // 余ったところは4で埋める
         for (int j = cur; j < 202000; j++)
             S[i][j] = 4;
     }
@@ -123,32 +130,43 @@ int dec()
     unsigned char now[N];
     int zero, one, wrong;
     unsigned char base[M + 3];
+    // 誤り訂正
     rep(i, 199998)
     {
+        // 読み取り0回目~N-1回目までのpt[j]列目をnowに格納
         rep(j, N) now[j] = S[j][pt[j]];
-        /*if(i>=199900){
-      rep(j,N) printf("%d ",now[j]);
-      printf("\n");
-    }*/
+        
+        // if(i>=199900){
+        //     rep(j,N) printf("%d ",now[j]);
+        //     printf("\n");
+        // }
+        
         zero = 0, one = 0;
         rep(j, N)
         {
             if (now[j] == 4)
                 continue;
+            // now[j]が2 or 3，かつ，i, now[j]が共に偶数 or 奇数の場合
             else if (now[j] & 2 && !((i & 1) ^ (now[j] & 1)))
                 one++;
+            // now[j]が0 or 1，かつ，i, now[j]が共に偶数 or 奇数の場合
             else if (!(now[j] & 2) && !((i & 1) ^ (now[j] & 1)))
                 zero++;
         }
+        // 全ての読み取りにおいて，i, now[j]が偶数，奇数が一致しないため，0にして打ち切り
         if (zero + one == 0)
         {
             ans[i] = '0';
             continue;
         }
+        // 多数決で0 or 1なのでansは0
         if (zero >= one)
             ans[i] = '0', wrong = 1;
+        // 多数決で2 or 3なのでansは1
         else
             ans[i] = '1', wrong = 0;
+
+        // 完全一致の場合，すべてのポイントを上げる
         if (zero == N || one == N)
         {
             rep(j, N) pt[j]++;
@@ -156,6 +174,7 @@ int dec()
         }
         int fail[N] = {};
         int cut = 0;
+        // ポイント調整
         rep(j, M + 3)
         {
             int n[5] = {};
@@ -168,6 +187,7 @@ int dec()
                 }
                 if (fail[k])
                     continue;
+                // 多数決で0 or 1の場合
                 if (wrong)
                 {
                     if (now[k] >= 2)
@@ -182,6 +202,7 @@ int dec()
                     }
                     n[S[k][pt[k] + j]]++;
                 }
+                // 多数決で2 or 3の場合
                 else
                 {
                     if (now[k] < 2)
@@ -211,6 +232,7 @@ int dec()
             if (now[j] == 4)
                 continue;
             unsigned char *p = base;
+            // 多数決で0 or 1の場合
             if (wrong)
             {
                 if (now[j] < 2 && !((now[j] & 1) ^ (i & 1)))
@@ -286,6 +308,7 @@ int dec()
                 else
                     pt[j] -= 2;
             }
+            // 多数決で2 or 3の場合
             else
             {
                 if (now[j] >= 2 && !((now[j] & 1) ^ (i & 1)))
