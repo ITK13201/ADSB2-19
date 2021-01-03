@@ -113,7 +113,7 @@ int dec(){
       else if(!(now[j]&2) && !((i&1)^(now[j]&1))) zero++;
     }
     if(zero+one==0){
-      rep(j,N) pt[j]++;
+      ans[i]='0';
       continue;
     }
     if(zero>=one) ans[i]='0',wrong=1;
@@ -292,7 +292,7 @@ int dec(){
   rep(i,4) if(maxi<last[i]) maxi=last[i],ls=i;
   char c2=ls&1;
   ls/=2;
-  char c1=ls;
+  char c1=ls&1;
   ans[199998]='0'+c1;
   ans[199999]='0'+c2;
   ans[200000]= '\n';
