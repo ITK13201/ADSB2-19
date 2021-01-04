@@ -8,7 +8,7 @@
 #define rep(i, n) for (register int(i) = 0; (i) < (n); (i)++)
 #define max(a, b) a > b ? a : b
 #define N 4
-#define M 13
+#define M 12
 
 int dp[M + 1][M + 1];
 
@@ -129,17 +129,12 @@ int dec()
     int pt[N] = {};
     unsigned char now[N];
     int zero, one, wrong;
-    unsigned char base[M + 3];
+    unsigned char base[M + 2];
     // 誤り訂正
     rep(i, 199998)
     {
         // 読み取り0回目~N-1回目までのpt[j]列目をnowに格納
         rep(j, N) now[j] = S[j][pt[j]];
-        
-        // if(i>=199900){
-        //     rep(j,N) printf("%d ",now[j]);
-        //     printf("\n");
-        // }
         
         zero = 0, one = 0;
         rep(j, N)
@@ -175,7 +170,7 @@ int dec()
         int fail[N] = {};
         int cut = 0;
         // ポイント調整
-        rep(j, M + 3)
+        rep(j, M + 2)
         {
             int n[5] = {};
             rep(k, N)
@@ -223,7 +218,7 @@ int dec()
             int plc = 0, maxi = 0;
             rep(k, 5) if (n[k] > maxi) plc = k, maxi = n[k];
             // 空列(4)のみの場合，cutに差分を保存して足切り
-            if (maxi == 0 && j > 3)
+            if (maxi == 0 && j > 2)
             {
                 cut = j;
                 break;
