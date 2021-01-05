@@ -12,6 +12,7 @@
 
 int dp[M + 1][M + 1];
 
+// 編集距離をもとめる関数
 inline static int edis(unsigned char *S, unsigned char *T)
 {
     bool chk = true;
@@ -40,6 +41,7 @@ inline static int edis(unsigned char *S, unsigned char *T)
     return dp[M][M];
 }
 
+// 空列がある場合の編集距離を求める関数
 inline static int edis2(unsigned char *S, unsigned char *T, int m)
 {
     bool chk = true;
@@ -226,6 +228,7 @@ int dec()
             // 最も多い値を保存
             base[j] = plc;
         }
+        // 多数決
         rep(j, N)
         {
             if (now[j] == 4)
@@ -240,30 +243,45 @@ int dec()
                     continue;
                 unsigned char *p2 = &S[j][pt[j] + 1];
                 int diff[4];
-                // 差分が0文字以外
+                // 差分が0文字以外(cut-3をmとする)
                 if (cut)
                 {
+                    // 比較
+                    // 多数決文字列: j ~ j+m-1
+                    // デコード文字列: j+1 ~ j+m
                     if ((diff[0] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j]++;
                         continue;
                     }
                     p += 1, p2 -= 1;
+                    // 比較
+                    // 多数決文字列: j+1 ~ j+m
+                    // デコード文字列: j ~ j+m-1
                     if ((diff[1] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j]--;
                         continue;
                     }
                     p--;
+                    // 比較
+                    // 多数決文字列: j ~ j+m-1
+                    // デコード文字列: j ~ j+m-1
                     if (edis2(p, p2, cut - 3) == 1)
                         continue;
                     p2 += 2;
+                    // 比較
+                    // 多数決文字列: j ~ j+m-1
+                    // デコード文字列: j+2 ~ j+m+1
                     if ((diff[2] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j] += 2;
                         continue;
                     }
                     p += 2, p2 -= 2;
+                    // 比較
+                    // 多数決文字列: j+2 ~ j+m+1
+                    // デコード文字列: j ~ j+m-1
                     if ((diff[3] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j] -= 2;
@@ -273,33 +291,49 @@ int dec()
                 // 差分が0文字
                 else
                 {
+                    // 比較
+                    // 多数決文字列: j ~ j+M-1
+                    // デコード文字列: j+1 ~ j+M
                     if ((diff[0] = edis(p, p2)) == 0)
                     {
                         pt[j]++;
                         continue;
                     }
                     p += 1, p2 -= 1;
+                    // 比較
+                    // 多数決文字列: j+1 ~ j+M
+                    // デコード文字列: j ~ j+M-1
                     if ((diff[1] = edis(p, p2)) == 0)
                     {
                         pt[j]--;
                         continue;
                     }
                     p--;
+                    // 比較
+                    // 多数決文字列: j ~ j+M-1
+                    // デコード文字列: j ~ j+M-1
                     if (edis(p, p2) == 1)
                         continue;
                     p2 += 2;
+                    // 比較
+                    // 多数決文字列: j ~ j+M-1
+                    // デコード文字列: j+2 ~ j+M+1
                     if ((diff[2] = edis(p, p2)) == 0)
                     {
                         pt[j] += 2;
                         continue;
                     }
                     p += 2, p2 -= 2;
+                    // 比較
+                    // 多数決文字列: j+2 ~ j+M+1
+                    // デコード文字列: j ~ j+M-1
                     if ((diff[3] = edis(p, p2)) == 0)
                     {
                         pt[j] -= 2;
                         continue;
                     }
                 }
+                // 完全に一致しなかった場合，最も小さいものでポイント調整
                 int mini = M, use = 0;
                 rep(k, 4) if (mini > diff[k]) mini = diff[k], use = k;
                 if (use == 0)
@@ -319,30 +353,45 @@ int dec()
                     continue;
                 unsigned char *p2 = &S[j][pt[j] + 1];
                 int diff[4];
-                // 差分が0文字以外
+                // 差分が0文字以外(cut-3をmとする)
                 if (cut)
                 {
+                    // 比較
+                    // 多数決文字列: j ~ j+m-1
+                    // デコード文字列: j+1 ~ j+m
                     if ((diff[0] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j]++;
                         continue;
                     }
                     p += 1, p2 -= 1;
+                    // 比較
+                    // 多数決文字列: j+1 ~ j+m
+                    // デコード文字列: j ~ j+m-1
                     if ((diff[1] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j]--;
                         continue;
                     }
                     p--;
+                    // 比較
+                    // 多数決文字列: j ~ j+m-1
+                    // デコード文字列: j ~ j+m-1
                     if (edis2(p, p2, cut - 3) == 1)
                         continue;
                     p2 += 2;
+                    // 比較
+                    // 多数決文字列: j ~ j+m-1
+                    // デコード文字列: j+2 ~ j+m+1
                     if ((diff[2] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j] += 2;
                         continue;
                     }
                     p += 2, p2 -= 2;
+                    // 比較
+                    // 多数決文字列: j+2 ~ j+m+1
+                    // デコード文字列: j ~ j+m-1
                     if ((diff[3] = edis2(p, p2, cut - 3)) == 0)
                     {
                         pt[j] -= 2;
@@ -352,32 +401,48 @@ int dec()
                 // 差分が0文字
                 else
                 {
+                    // 比較
+                    // 多数決文字列: j ~ j+M-1
+                    // デコード文字列: j+1 ~ j+M
                     if ((diff[0] = edis(p, p2)) == 0)
                     {
                         pt[j]++;
                         continue;
                     }
                     p += 1, p2 -= 1;
+                    // 比較
+                    // 多数決文字列: j+1 ~ j+M
+                    // デコード文字列: j ~ j+M-1
                     if ((diff[1] = edis(p, p2)) == 0)
                     {
                         pt[j]--;
                         continue;
                     }
                     p--;
+                    // 比較
+                    // 多数決文字列: j ~ j+M-1
+                    // デコード文字列: j ~ j+M-1
                     if (edis(p, p2) == 1)
                         continue;
                     p2 += 2;
+                    // 比較
+                    // 多数決文字列: j ~ j+M-1
+                    // デコード文字列: j+2 ~ j+M+1
                     if ((diff[2] = edis(p, p2)) == 0)
                     {
                         pt[j] += 2;
                         continue;
                     }
                     p += 2, p2 -= 2;
+                    // 比較
+                    // 多数決文字列: j+2 ~ j+M+1
+                    // デコード文字列: j ~ j+M-1
                     if ((diff[3] = edis(p, p2)) == 0)
                     {
                         pt[j] -= 2;
                         continue;
                     }
+                    // 完全に一致しなかった場合，最も小さいものでポイント調整
                     int mini = M, use = 0;
                     rep(k, 4) if (mini > diff[k]) mini = diff[k], use = k;
                     if (use == 0)
@@ -391,19 +456,26 @@ int dec()
                 }
             }
         }
+        // 次のインデックスへ
         rep(j, N)
         {
             pt[j]++;
+            // 範囲外参照防止用
             if (pt[j] >= 201900)
                 pt[j] = 200500;
         }
     }
+    // 最後の部分のデコード
     int last[4] = {};
+    // 多数決
     rep(i, N) if (S[i][pt[i]] != 4) last[S[i][pt[i]]]++;
     int ls = 0, maxi = 0;
+    // 多数決で決定
     rep(i, 4) if (maxi < last[i]) maxi = last[i], ls = i;
+    // 偶奇で判定
     char c2 = ls & 1;
     ls /= 2;
+    // ls >= 2 or not で判定
     char c1 = ls & 1;
     ans[199998] = '0' + c1;
     ans[199999] = '0' + c2;
